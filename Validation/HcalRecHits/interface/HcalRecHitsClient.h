@@ -43,11 +43,11 @@ class HcalRecHitsClient : public edm::EDAnalyzer {
 
   bool verbose_;
   bool debug_;
-  bool doslhc_;
 
   std::string dirName_;
   std::string dirNameJet_;
   std::string dirNameMET_;
+  bool doSLHC_;
 
  public:
   explicit HcalRecHitsClient(const edm::ParameterSet& );

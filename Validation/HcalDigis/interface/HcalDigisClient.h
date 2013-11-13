@@ -61,7 +61,6 @@ private:
         double max;
     };
 
-    bool doslhc_;
 
     virtual void runClient();
     int HcalDigisEndjob(const std::vector<MonitorElement*> &hcalMEs, std::string subdet_);
@@ -106,6 +105,7 @@ private:
     DQMStore* dbe_;
     std::string outputFile_;
     std::string dirName_;
+    bool doSLHC_;
 };
 
 

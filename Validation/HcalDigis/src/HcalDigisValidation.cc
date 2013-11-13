@@ -26,13 +26,19 @@ HcalDigisValidation::HcalDigisValidation(const edm::ParameterSet& iConfig) {
 
     subdet_ = iConfig.getUntrackedParameter<std::string > ("subdetector", "all");
     outputFile_ = iConfig.getUntrackedParameter<std::string > ("outputFile", "");
-    inputTag_ = iConfig.getParameter<edm::InputTag > ("digiLabel");
+   
+     //Collections
+    theHBHEDigisCollectionLabel = iConfig.getParameter<edm::InputTag>("HBHEDigisCollectionLabel");
+    theHFDigisCollectionLabel   = iConfig.getParameter<edm::InputTag>("HFDigisCollectionLabel");
+    theHODigisCollectionLabel   = iConfig.getParameter<edm::InputTag>("HODigisCollectionLabel");
+
     mc_ = iConfig.getUntrackedParameter<std::string > ("mc", "no");
     mode_ = iConfig.getUntrackedParameter<std::string > ("mode", "multi");
     dirName_ = iConfig.getUntrackedParameter<std::string > ("dirName", "HcalDigisV/HcalDigiTask");
  
-    // false for regular rel val and true for SLHC rel val 
-    doSLHC_ = false;
+    // "no" for regular rel val and "yes" for SLHC rel val 
+    doSLHC_   = iConfig.getUntrackedParameter<bool>("doSLHC", false);
+
 
     dbe_ = edm::Service<DQMStore > ().operator->();
     msm_ = new std::map<std::string, MonitorElement*>();
@@ -103,6 +109,7 @@ void HcalDigisValidation::booking(const std::string bsubdet, int bnoise, int bmc
 //        digiAmp = HistLim(200, 0., 1000.);
         gainLim = HistLim(150, 0., 1.5);
     }
+
 
     Char_t histo[100];
     const char * sub = bsubdet.c_str();
@@ -184,6 +191,15 @@ void HcalDigisValidation::booking(const std::string bsubdet, int bnoise, int bmc
         sprintf(histo, "HcalDigiTask_ADC0_adc_depth4_%s", sub);
         book1D(histo, pedestal);
 
+        if (doSLHC_){
+        sprintf(histo, "HcalDigiTask_ADC0_adc_depth5_%s", sub);
+        book1D(histo, pedestal);
+        sprintf(histo, "HcalDigiTask_ADC0_adc_depth6_%s", sub);
+        book1D(histo, pedestal);
+        sprintf(histo, "HcalDigiTask_ADC0_adc_depth7_%s", sub);
+        book1D(histo, pedestal);
+        }
+
 
         sprintf(histo, "HcalDigiTask_ADC0_fC_depth1_%s", sub);
         book1D(histo, pedestalfC);
@@ -193,6 +209,14 @@ void HcalDigisValidation::booking(const std::string bsubdet, int bnoise, int bmc
         book1D(histo, pedestalfC);
         sprintf(histo, "HcalDigiTask_ADC0_fC_depth4_%s", sub);
         book1D(histo, pedestalfC);
+
+        if (doSLHC_){
+        sprintf(histo, "HcalDigiTask_ADC0_fC_depth5_%s", sub);
+        book1D(histo, pedestalfC);
+        sprintf(histo, "HcalDigiTask_ADC0_fC_depth6_%s", sub);
+        book1D(histo, pedestalfC);
+        sprintf(histo, "HcalDigiTask_ADC0_fC_depth7_%s", sub);
+        }
 
 
         sprintf(histo, "HcalDigiTask_signal_amplitude_%s", sub);
@@ -464,39 +488,81 @@ void HcalDigisValidation::analyze(const edm::Event& iEvent, const edm::EventSetu
 
     if (subdet_ != "all") {
        noise_ = 0;
-       if (subdet_ == "HB") reco<HBHEDataFrame > (iEvent, iSetup);
-       if (subdet_ == "HE") reco<HBHEDataFrame > (iEvent, iSetup);
-       if (subdet_ == "HO") reco<HODataFrame > (iEvent, iSetup);
-       if (subdet_ == "HF") reco<HFDataFrame > (iEvent, iSetup);
+
+        if (doSLHC_ == false){
+            if (subdet_ == "HB") reco<HBHEDataFrame > (iEvent, iSetup);
+            if (subdet_ == "HE") reco<HBHEDataFrame > (iEvent, iSetup);
+            if (subdet_ == "HO") reco<HODataFrame > (iEvent, iSetup);
+            if (subdet_ == "HF") reco<HFDataFrame > (iEvent, iSetup);
+        }
+
+        // Upgrade
+        if (doSLHC_ == true){
+            if (subdet_ == "HB") reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+            if (subdet_ == "HE") reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+            if (subdet_ == "HO") reco<HODataFrame > (iEvent, iSetup);
+            if (subdet_ == "HF") reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+        }
 
         if (subdet_ == "noise") {
             noise_ = 1;
             //      std::cout << " >>>>> HcalDigiTester::analyze  entering noise "
             //	    << std::endl;
-    	    subdet_ = "HB";
-            reco<HBHEDataFrame > (iEvent, iSetup);
-            subdet_ = "HE";
-            reco<HBHEDataFrame > (iEvent, iSetup);
-            subdet_ = "HO";
-            reco<HODataFrame > (iEvent, iSetup);
-            subdet_ = "HF";
-            reco<HFDataFrame > (iEvent, iSetup);
-            subdet_ = "noise";
-            }
-        }// all subdetectors
-    else {
-        noise_ = 0;
 
-        subdet_ = "HB";
-        reco<HBHEDataFrame > (iEvent, iSetup);
-        subdet_ = "HE";
-        reco<HBHEDataFrame > (iEvent, iSetup);
-        subdet_ = "HO";
-        reco<HODataFrame > (iEvent, iSetup);
-        subdet_ = "HF";
-        reco<HFDataFrame > (iEvent, iSetup);
-        subdet_ = "all";
-    }
+            if (doSLHC_ == false){
+                subdet_ = "HB";
+                reco<HBHEDataFrame > (iEvent, iSetup);
+                subdet_ = "HE";
+                reco<HBHEDataFrame > (iEvent, iSetup);
+                subdet_ = "HO";
+                reco<HODataFrame > (iEvent, iSetup);
+                subdet_ = "HF";
+                reco<HFDataFrame > (iEvent, iSetup);
+                subdet_ = "noise";
+            }
+
+            // Upgrade
+            if (doSLHC_ == true){
+    	        subdet_ = "HB";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "HE";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "HO";
+                reco<HODataFrame > (iEvent, iSetup);
+                subdet_ = "HF";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "noise";
+            }
+          }
+        }// all subdetectors
+        else {
+        noise_ = 0;
+        
+            if (doSLHC_ == false){
+                subdet_ = "HB";
+                reco<HBHEDataFrame > (iEvent, iSetup);
+                subdet_ = "HE";
+                reco<HBHEDataFrame > (iEvent, iSetup);
+                subdet_ = "HO";
+                reco<HODataFrame > (iEvent, iSetup);
+                subdet_ = "HF";
+                reco<HFDataFrame > (iEvent, iSetup);
+                subdet_ = "all";
+           }
+
+            // Upgrade
+            if (doSLHC_ == true){
+                subdet_ = "HB";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "HE";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "HO";
+                reco<HODataFrame > (iEvent, iSetup);
+                subdet_ = "HF";
+                reco<HcalUpgradeDataFrame > (iEvent, iSetup);
+                subdet_ = "all";
+            }
+       }
 
     fill1D("nevtot", 0);
     nevtot++;
@@ -517,7 +583,19 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
     // ADC2fC
     HcalCalibrations calibrations;
     CaloSamples tool;
-    iEvent.getByLabel(inputTag_, digiCollection);
+//    iEvent.getByLabel(inputTag_, digiCollection);
+
+    if( subdet_ == "HB" || subdet_ == "HE" ){ 
+       iEvent.getByLabel(theHBHEDigisCollectionLabel, digiCollection);
+    }
+    if( subdet_ == "HF" ){ 
+       iEvent.getByLabel(theHFDigisCollectionLabel, digiCollection);
+    }
+    if( subdet_ == "HO" ){
+       iEvent.getByLabel(theHODigisCollectionLabel, digiCollection);
+    }
+
+
 //    std::cout << "***************RECO*****************" << std::endl;
     int isubdet = 0;
     if (subdet_ == "HB") isubdet = 1;
@@ -531,6 +609,7 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
     if (isubdet == 4) nevent4++;
 
     int indigis = 0;
+
     //  amplitude for signal cell at diff. depths
     double ampl1_c = 0.;
     double ampl2_c = 0.;
@@ -541,11 +620,12 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
     double ampl7_c = 0.;
     double ampl_c = 0.;
 
+
     // is set to 1 if "seed" SimHit is found
     int seedSimHit = 0;
 
-    //  std::cout << " HcalDigiTester::reco :  "
-    // 	    << "subdet=" << subdet << "  noise="<< noise_ << std::endl;
+//      std::cout << " HcalDigiTester::reco :  "
+//     	    << "subdet=" << subdet << "  noise="<< noise_ << std::endl;
 
     int ieta_Sim = 9999;
     int iphi_Sim = 9999;
@@ -591,14 +671,14 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
         } // end of SimHits
     }// end of mc_ == "yes"
 
-    // CYCLE OVER CELLS ========================================================
+//    // CYCLE OVER CELLS ========================================================
     int Ndig = 0;
 
-    /*
-    std::cout << " HcalDigiTester::reco :     nevent 1,2,3,4 = "
-              << nevent1 << " " << nevent2 << " " << nevent3 << " "
-              << nevent4 << std::endl;
-     */
+//    std::cout << " HcalDigiTester::reco :     nevent 1,2,3,4 = "
+//              << nevent1 << " " << nevent2 << " " << nevent3 << " "
+//              << nevent4 << std::endl;
+
+
 
     for (digiItr = digiCollection->begin(); digiItr != digiCollection->end(); digiItr++) {
 
@@ -608,7 +688,6 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
         int ieta = cell.ieta();
         if (ieta > 0) ieta--;
         int sub = cell.subdet();
-
 
         //  amplitude for signal cell at diff. depths
         double ampl = 0.;
@@ -643,20 +722,25 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
             fill2D("HcalDigiTask_pwidthMap_Depth" + str(depth) + "_" + subdet_, double(ieta), double(iphi), pedWidth->getWidth(0));
 
         }// end of event #1
-        //std::cout << "==== End of event noise block in cell cycle"  << std::endl;
+//        std::cout << "==== End of event noise block in cell cycle"  << std::endl;
 
         if (sub == isubdet) Ndig++; // subdet number of digi
 
         // No-noise case, only single  subdet selected  ===========================
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         if (sub == isubdet && noise_ == 0) {
-
-
+        
             HcalCalibrations calibrations = conditions->getHcalCalibrations(cell);
+         
 
             const HcalQIECoder* channelCoder = conditions->getHcalCoder(cell);
+
 	    const HcalQIEShape* shape = conditions->getHcalShape(channelCoder);
+
             HcalCoderDb coder(*channelCoder, *shape);
+
             coder.adc2fC(*digiItr, tool);
 
             double noiseADC = (*digiItr)[0].adc();
@@ -665,7 +749,6 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
             fill1D("HcalDigiTask_ADC0_adc_depth" + str(depth) + "_" + subdet_, noiseADC);
             fill1D("HcalDigiTask_ADC0_fC_depth" + str(depth) + "_" + subdet_, noisefC);
 
-
             // OCCUPANCY maps fill
             fill2D("HcalDigiTask_ieta_iphi_occupancy_map_depth" + str(depth) + "_" + subdet_, double(ieta), double(iphi));
 
@@ -673,21 +756,15 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
             // - for each Digi
             // - for one Digi with max SimHits E in subdet
 
-
             int closen = 0; // =1 if 1) seedSimHit = 1 and 2) the cell is the same
             if (ieta == ieta_Sim && iphi == iphi_Sim) closen = seedSimHit;
+
 
             for (int ii = 0; ii < tool.size(); ii++) {
                 int capid = (*digiItr)[ii].capid();
                 // single ts amplitude
                 double val = (tool[ii] - calibrations.pedestal(capid));
-/*
-                if (val > 10.) {
-                    if (depth == 1) strtmp = "HcalDigiTask_all_amplitudes_vs_bin_depth1_" + subdet_;
-                    else strtmp = "HcalDigiTask_all_amplitudes_vs_bin_depth2_" + subdet_;
-                    fill2D(strtmp, double(ii), val);
-                }
-*/
+
                 if (val > 100.) {
                     if (depth == 1) strtmp = "HcalDigiTask_all_amplitudes_vs_bin_1D_depth1_" + subdet_;
                     else strtmp = "HcalDigiTask_all_amplitudes_vs_bin_1D_depth2_" + subdet_;
@@ -749,23 +826,16 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
             // end of time bucket sample
 
 
+
             // maps of sum of amplitudes (sum lin.digis(4,5,6,7) - ped) all depths
-/*
-            strtmp = "HcalDigiTask_ieta_iphi_map_of_amplitudes_fC_depth1_" + subdet_;
-            fill2D(strtmp, double(ieta), double(iphi), ampl1);
-            strtmp = "HcalDigiTask_ieta_iphi_map_of_amplitudes_fC_depth2_" + subdet_;
-            fill2D(strtmp, double(ieta), double(iphi), ampl2);
-            strtmp = "HcalDigiTask_ieta_iphi_map_of_amplitudes_fC_depth3_" + subdet_;
-            fill2D(strtmp, double(ieta), double(iphi), ampl3);
-            strtmp = "HcalDigiTask_ieta_iphi_map_of_amplitudes_fC_depth4_" + subdet_;
-            fill2D(strtmp, double(ieta), double(iphi), ampl4);
-*/
             // just 1D of all cells' amplitudes
             strtmp = "HcalDigiTask_sum_all_amplitudes_" + subdet_;
             fill1D(strtmp, ampl);
 
 
-            if (ampl1 > 10. || ampl2 > 10. || ampl3 > 10. || ampl4 > 10.) indigis++;
+            if (ampl1 > 10. || ampl2 > 10. || ampl3 > 10. || ampl4 > 10. || ampl5 > 10. || ampl6 > 10. || ampl7 > 10.) indigis++;
+
+
 
             // fraction 5,6 bins if ampl. is big.
             if (ampl1 > 30. && depth == 1 && closen == 1 && isubdet != 4) {
@@ -809,8 +879,28 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
             fill1D(strtmp, ampl3);
             strtmp = "HcalDigiTask_signal_amplitude_depth4_" + subdet_;
             fill1D(strtmp, ampl4);
+            if (doSLHC_){
+                strtmp = "HcalDigiTask_signal_amplitude_depth5_" + subdet_;
+                fill1D(strtmp, ampl5);
+                strtmp = "HcalDigiTask_signal_amplitude_depth6_" + subdet_;
+                fill1D(strtmp, ampl6);
+                strtmp = "HcalDigiTask_signal_amplitude_depth7_" + subdet_;
+                fill1D(strtmp, ampl7);
+            }
+
+
+
+
         }
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
     } // End of CYCLE OVER CELLS =============================================
+
+
+//    std::cout << "====  End of CYCLE OVER CELLS"  << std::endl;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if (isubdet != 0 && noise_ == 0) { // signal only, once per event
         strtmp = "HcalDigiTask_number_of_amplitudes_above_10fC_" + subdet_;
@@ -889,6 +979,7 @@ template<class Digi> void HcalDigisValidation::reco(const edm::Event& iEvent, co
 
     } //  end of if( subdet != 0 && noise_ == 0) { // signal only
 }
+
 
 void HcalDigisValidation::eval_occupancy() {
 

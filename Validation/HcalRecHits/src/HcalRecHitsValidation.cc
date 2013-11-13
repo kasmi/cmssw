@@ -5,7 +5,9 @@
 HcalRecHitsValidation::HcalRecHitsValidation(edm::ParameterSet const& conf) {
   // DQM ROOT output
   outputFile_ = conf.getUntrackedParameter<std::string>("outputFile", "myfile.root");
-  
+
+ 
+ 
   if ( outputFile_.size() != 0 ) {
     edm::LogInfo("OutputInfo") << " Hcal RecHit Task histograms will be saved to '" << outputFile_.c_str() << "'";
   } else {
@@ -27,9 +29,7 @@ HcalRecHitsValidation::HcalRecHitsValidation(edm::ParameterSet const& conf) {
   mc_           = conf.getUntrackedParameter<std::string>("mc", "yes");
   famos_        = conf.getUntrackedParameter<bool>("Famos", false);
   useAllHistos_ = conf.getUntrackedParameter<bool>("useAllHistos", false);
-
-  // false for regular relval and true for SLHC relval
-  doSLHC_ = conf.getUntrackedParameter<bool>("doSLHC", false);
+  doSLHC_       = conf.getUntrackedParameter<bool>("doSLHC", false);
 
   //Collections
   theHBHERecHitCollectionLabel = conf.getUntrackedParameter<edm::InputTag>("HBHERecHitCollectionLabel");

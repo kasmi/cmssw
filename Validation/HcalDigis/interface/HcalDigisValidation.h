@@ -28,7 +28,7 @@
 #include "CondFormats/HcalObjects/interface/HcalQIEShape.h"
 
 #include "DataFormats/HcalDigi/interface/HBHEDataFrame.h"
-
+#include "DataFormats/HcalDigi/interface/HcalUpgradeDataFrame.h"
 
 #include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 #include "DataFormats/HcalDigi/interface/HcalDigiCollections.h"
@@ -104,10 +104,14 @@ private:
     std::string zside_;
     std::string dirName_;
     edm::InputTag inputTag_;
+    edm::InputTag theHBHEDigisCollectionLabel; 
+    edm::InputTag theHFDigisCollectionLabel; 
+    edm::InputTag theHODigisCollectionLabel;  
+    bool doSLHC_;
+
     std::string mode_;
     std::string mc_;
     int noise_;
-    bool doSLHC_;
 
     edm::ESHandle<CaloGeometry> geometry;
     edm::ESHandle<HcalDbService> conditions;

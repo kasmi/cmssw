@@ -77,6 +77,7 @@ class HcalRecHitsValidation : public edm::EDAnalyzer {
   std::string eventype_;
   std::string sign_;
   std::string mc_;
+
   bool        famos_;
   bool        useAllHistos_;
   bool        doSLHC_;
