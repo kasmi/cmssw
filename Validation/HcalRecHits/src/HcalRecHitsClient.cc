@@ -814,4 +814,5 @@ int HcalRecHitsClient::HcalRecHitsEndjob(const std::vector<MonitorElement*> &hca
    return 1;
 }
 
+
 DEFINE_FWK_MODULE(HcalRecHitsClient);
