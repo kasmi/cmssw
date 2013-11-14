@@ -216,6 +216,7 @@ void HcalDigisValidation::booking(const std::string bsubdet, int bnoise, int bmc
         sprintf(histo, "HcalDigiTask_ADC0_fC_depth6_%s", sub);
         book1D(histo, pedestalfC);
         sprintf(histo, "HcalDigiTask_ADC0_fC_depth7_%s", sub);
+        book1D(histo, pedestalfC);
         }
 
 
